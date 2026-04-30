@@ -72,5 +72,3 @@ int __sys_memmap(struct krnl_t *krnl, uint32_t pid, struct sc_regs* regs)
    
    return 0;
 }
-
-
