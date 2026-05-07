@@ -151,44 +151,13 @@ addr_t* pte_get_pointer(struct pcb_t* caller, addr_t pgn, int alloc)
  */
 int pte_set_swap(struct pcb_t *caller, addr_t pgn, int swptyp, addr_t swpoff)
 {
-  struct krnl_t *krnl = caller->krnl;
-
-  addr_t *pte;
-  addr_t pgd=0;
-  addr_t p4d=0;
-  addr_t pud=0;
-  addr_t pmd=0;
-  addr_t pt=0;
+  addr_t *pte_ptr = pte_get_pointer(caller, pgn, 1);
+  if (pte_ptr == NULL) return -1;
+  addr_t *pte = pte_ptr;
 	
-  // dummy pte alloc to avoid runtime error
-#ifdef MM64	
-  /* Get value from the system */
-  /* TODO Perform multi-level page mapping */
-  get_pd_from_pagenum(pgn, &pgd, &p4d, &pud, &pmd, &pt);
-  
-  addr_t *pgd_tbl = krnl->mm->pgd;
-  if(pgd_tbl == NULL) return 0;
-
-  addr_t *p4d_tbl = (addr_t *)pgd_tbl[pgd];
-  if(p4d_tbl == NULL) return 0;
-  
-  addr_t *pud_tbl = (addr_t *)p4d_tbl[p4d];
-    if (pud_tbl == NULL) return 0;
-
-  addr_t *pmd_tbl = (addr_t *)pud_tbl[pud];
-  if (pmd_tbl == NULL) return 0;
-
-  addr_t *pt_tbl = (addr_t *)pmd_tbl[pmd];
-  if (pt_tbl == NULL) return 0;
-
-  pte = (addr_t *)pt_tbl[pt];
-#else
-  pte = &krnl->mm->pgd[pgn];
-#endif
-	
-  SETBIT(*pte, PAGING_PTE_PRESENT_MASK);
+  CLRBIT(*pte, PAGING_PTE_PRESENT_MASK);
   SETBIT(*pte, PAGING_PTE_SWAPPED_MASK);
-
+  CLRBIT(*pte, PAGING_PTE_DIRTY_MASK);
   SETVAL(*pte, swptyp, PAGING_PTE_SWPTYP_MASK, PAGING_PTE_SWPTYP_LOBIT);
   SETVAL(*pte, swpoff, PAGING_PTE_SWPOFF_MASK, PAGING_PTE_SWPOFF_LOBIT);
 
@@ -205,20 +174,10 @@ int pte_set_fpn(struct pcb_t *caller, addr_t pgn, addr_t fpn)
   addr_t *pte_ptr = pte_get_pointer(caller, pgn, 1);
   if (pte_ptr == NULL) return -1;
   addr_t *pte = pte_ptr;
-	
-  // dummy pte alloc to avoid runtime error
-  //pte = malloc(sizeof(addr_t));
-#ifdef MM64	
-  /* Get value from the system */
-  /* TODO Perform multi-level page mapping */
-  
-#else
-  pte = &krnl->mm->pgd[pgn];
-#endif
 
   SETBIT(*pte, PAGING_PTE_PRESENT_MASK);
   CLRBIT(*pte, PAGING_PTE_SWAPPED_MASK);
-
+  CLRBIT(*pte, PAGING_PTE_DIRTY_MASK);
   SETVAL(*pte, fpn, PAGING_PTE_FPN_MASK, PAGING_PTE_FPN_LOBIT);
 
   return 0;
@@ -244,10 +203,13 @@ uint32_t pte_get_entry(struct pcb_t *caller, addr_t pgn)
  **/
 int pte_set_entry(struct pcb_t *caller, addr_t pgn, uint32_t pte_val)
 {
-	struct krnl_t *krnl = caller->krnl;
-	krnl->mm->pgd[pgn]=pte_val;
-	
-	return 0;
+	addr_t *pte_ptr = pte_get_pointer(caller, pgn, 1);
+
+    if (pte_ptr == NULL)
+        return -1;
+
+    *pte_ptr = (addr_t)pte_val;
+    return 0;
 }
 
 
