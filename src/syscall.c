@@ -31,7 +31,6 @@ int __sys_ni_syscall(struct krnl_t *krnl, struct sc_regs *regs)
    /*
     * DUMMY systemcall
     */
-
    return 0;
 }
 
