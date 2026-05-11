@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2026 pdnguyen of HCMC University of Technology VNU-HCM
  */
@@ -121,6 +122,7 @@ int MEMPHY_write(struct memphy_struct *mp, addr_t addr, BYTE data)
 /*
  *  MEMPHY_format-format MEMPHY device
  *  @mp: memphy struct
+ *  @pagesz: page size in bytes
  */
 int MEMPHY_format(struct memphy_struct *mp, int pagesz)
 {
@@ -135,6 +137,9 @@ int MEMPHY_format(struct memphy_struct *mp, int pagesz)
    /* Init head of free framephy list */
    fst = malloc(sizeof(struct framephy_struct));
    fst->fpn = iter;
+   /* fp_next of head must be NULL before the loop links further nodes,
+    * otherwise the tail of the list holds a garbage pointer */
+   fst->fp_next = NULL;
    mp->free_fp_list = fst;
 
    /* We have list with first element, fill in the rest num-1 element member*/
@@ -150,6 +155,11 @@ int MEMPHY_format(struct memphy_struct *mp, int pagesz)
    return 0;
 }
 
+/*
+ *  MEMPHY_get_freefp - obtain a free physical frame from MEMPHY
+ *  @mp: memphy struct
+ *  @retfpn: obtained frame page number
+ */
 int MEMPHY_get_freefp(struct memphy_struct *mp, addr_t *retfpn)
 {
    struct framephy_struct *fp = mp->free_fp_list;
@@ -157,34 +167,152 @@ int MEMPHY_get_freefp(struct memphy_struct *mp, addr_t *retfpn)
    if (fp == NULL)
       return -1;
 
+   /* Detach head node from free list and return its frame number */
    *retfpn = fp->fpn;
    mp->free_fp_list = fp->fp_next;
 
    /* MEMPHY is iteratively used up until its exhausted
     * No garbage collector acting then it not been released
     */
-   free(fp);
+   /* Move node to used list instead of freeing it so the set of
+    * in-use frames can be walked by MEMPHY_dump and correctly
+    * reclaimed by MEMPHY_put_freefp later */
+   fp->fp_next = mp->used_fp_list;
+   mp->used_fp_list = fp;
 
    return 0;
 }
 
+/*
+ *  MEMPHY_dump dump memphy content mp->storage
+ *  @mp: memphy struct
+ */
 int MEMPHY_dump(struct memphy_struct *mp)
 {
-  /*TODO dump memphy contnt mp->storage
-   *     for tracing the memory content
-   */
+   /*TODO dump memphy contnt mp->storage
+    *     for tracing the memory content
+    */
+
+   if (mp == NULL)
+      return -1;
+
+   int pagesz    = PAGING_PAGESZ;
+   int numframes = mp->maxsz / pagesz;
+
+   /* Print device-level summary before walking frames */
+   printf("\n=========== MEMPHY DUMP ===========\n");
+   printf("  Capacity : %d bytes  (%d frames x %d B/frame)\n",
+          mp->maxsz, numframes, pagesz);
+   printf("  Access   : %s\n", mp->rdmflg ? "random" : "sequential");
+
+   /* Walk free_fp_list to report which frames are still available */
+   printf("  Free frames : ");
+   struct framephy_struct *cur = mp->free_fp_list;
+   int cnt = 0;
+   while (cur != NULL)
+   {
+      printf("%d ", cur->fpn);
+      cur = cur->fp_next;
+      cnt++;
+   }
+   if (cnt == 0)
+      printf("(none)");
+   printf("  [%d total]\n", cnt);
+
+   /* Walk used_fp_list to report which frames are currently allocated */
+   printf("  Used frames : ");
+   cur = mp->used_fp_list;
+   cnt = 0;
+   while (cur != NULL)
+   {
+      printf("%d ", cur->fpn);
+      cur = cur->fp_next;
+      cnt++;
+   }
+   if (cnt == 0)
+      printf("(none)");
+   printf("  [%d total]\n", cnt);
+
+   /* Dump raw bytes of every frame as hex and printable ASCII,
+    * matching the layout convention used in memory-trace tools */
+   printf("\n  --- frame storage (hex | ASCII) ---\n");
+   int frm, col;
+   BYTE b;
+   for (frm = 0; frm < numframes; frm++)
+   {
+      int base = frm * pagesz;
+      printf("  frame %4d [0x%06x] : ", frm, base);
+
+      /* Hex column – show up to 16 bytes per frame line */
+      for (col = 0; col < pagesz && col < 16; col++)
+      {
+         b = mp->storage[base + col];
+         printf("%02x ", b);
+      }
+      if (pagesz > 16)
+         printf("... ");
+
+      printf("| ");
+
+      /* ASCII column – non-printable bytes replaced with '.' */
+      for (col = 0; col < pagesz && col < 16; col++)
+      {
+         b = mp->storage[base + col];
+         printf("%c", (b >= 0x20 && b <= 0x7e) ? (char)b : '.');
+      }
+      if (pagesz > 16)
+         printf("...");
+
+      printf("\n");
+   }
+
+   printf("====================================\n\n");
    return 0;
 }
 
+/*
+ *  MEMPHY_put_freefp - return a used frame back to free pool
+ *  @mp: memphy struct
+ *  @fpn: frame page number to return
+ */
 int MEMPHY_put_freefp(struct memphy_struct *mp, addr_t fpn)
 {
-   struct framephy_struct *fp = mp->free_fp_list;
-   struct framephy_struct *newnode = malloc(sizeof(struct framephy_struct));
+   /* Search used_fp_list for the matching frame node so we
+    * can reuse the same allocation rather than leaking it */
+   struct framephy_struct *fp   = mp->used_fp_list;
+   struct framephy_struct *prev = NULL;
+   struct framephy_struct *node = NULL;
+
+   while (fp != NULL)
+   {
+      if ((addr_t)fp->fpn == fpn)
+      {
+         /* Unlink from used list before moving to free list */
+         if (prev != NULL)
+            prev->fp_next    = fp->fp_next;
+         else
+            mp->used_fp_list = fp->fp_next;
+
+         node = fp;
+         break;
+      }
+      prev = fp;
+      fp   = fp->fp_next;
+   }
 
    /* Create new node with value fpn */
-   newnode->fpn = fpn;
-   newnode->fp_next = fp;
-   mp->free_fp_list = newnode;
+   /* If frame was not tracked in used list, allocate a fresh node
+    * so the frame is still correctly returned to the free pool */
+   if (node == NULL)
+   {
+      node      = malloc(sizeof(struct framephy_struct));
+      node->fpn = fpn;
+   }
+
+   /* Prepend to free list – mirrors the original single-line logic
+    * of pointing the new node's next at the current list head */
+   node->fp_next    = mp->free_fp_list;
+   mp->free_fp_list = node;
 
    return 0;
 }
@@ -199,6 +327,10 @@ int init_memphy(struct memphy_struct *mp, addr_t max_size, int randomflg)
    memset(mp->storage, 0, max_size * sizeof(BYTE));
 
    MEMPHY_format(mp, PAGING_PAGESZ);
+
+   /* used_fp_list has no entries at startup; set to NULL explicitly
+    * so MEMPHY_get_freefp and MEMPHY_dump see a well-formed list */
+   mp->used_fp_list = NULL;
 
    mp->rdmflg = (randomflg != 0) ? 1 : 0;
 
