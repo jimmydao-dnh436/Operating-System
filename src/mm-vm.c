@@ -111,7 +111,7 @@ int validate_overlap_vm_area(struct pcb_t *caller, int vmaid, addr_t vmastart, a
 
   while (vma != NULL)
   {
-    if (vma != cur_area && OVERLAP(cur_area->vm_start, cur_area->vm_end, vma->vm_start, vma->vm_end))
+    if (vma != cur_area && OVERLAP(vmastart, vmaend, vma->vm_start, vma->vm_end))
     {
       return -1;
     }
@@ -162,7 +162,7 @@ int inc_vma_limit(struct pcb_t *caller, int vmaid, addr_t inc_sz)
   /* The obtained vm area (only)
    * now will be alloc real ram region */
 
- if (vm_map_ram(caller, old_end, new_end, incnumpage, newrg) < 0) {
+  if (vm_map_ram(caller, old_end, new_end, old_end, incnumpage, newrg) < 0) {
                 return -1; /* Map the memory to MEMRAM */
   }
   

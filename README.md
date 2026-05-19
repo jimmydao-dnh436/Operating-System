@@ -1,3 +1,176 @@
+# Phần 2.2.3 — Physical Memory (`mm-memphy.c`)
+
+> **CO2018** · File: `src/mm-memphy.c`
+
+---
+
+## 1. Nhiệm vụ
+
+| # | Hàm | Việc làm |
+|---|---|---|
+| 1 | `init_memphy` | Khởi tạo thiết bị: malloc → memset → format |
+| 2 | `MEMPHY_format` | Chia storage thành N frame, xây `free_fp_list` |
+| 3 | `MEMPHY_get_freefp` | Lấy 1 frame từ free list → chuyển sang used list |
+| 4 | `MEMPHY_put_freefp` | Trả frame: unlink từ used list → prepend vào free list |
+| 5 | `MEMPHY_read/write` | Đọc/ghi byte — phân nhánh theo `rdmflg` |
+| 6 | `MEMPHY_mv_csr` | Di cursor tuần tự (chỉ khi `rdmflg = 0`) |
+| 7 | `MEMPHY_dump` | In trạng thái frame + hex dump storage |
+
+---
+
+## 2. Cấu trúc dữ liệu
+
+```
+memphy_struct
+┌────────────────────────────────────────────────┐
+│  BYTE *storage      ←── mảng byte thô          │
+│  int   maxsz        ←── tổng dung lượng        │
+│  int   rdmflg       ←── 1=random | 0=serial    │
+│  int   cursor       ←── chỉ dùng khi rdmflg=0  │
+│                                                │
+│  framephy_struct *free_fp_list  ─────────────┐ │
+│  framephy_struct *used_fp_list  ──────────┐  │ │
+└───────────────────────────────────────────│──│─┘
+                                            │  │
+          ┌─────────────────────────────────┘  │
+          │         ┌──────────────────────────┘
+          ▼         ▼
+    framephy_struct (node của linked list)
+    ┌─────────────────────┐   ┌─────────────────────┐
+    │  fpn  = 0           │   │  fpn  = 1           │
+    │  fp_next ───────────┼──►│  fp_next ───────────┼──► NULL
+    └─────────────────────┘   └─────────────────────┘
+
+
+Ánh xạ frame → byte trong storage:
+
+  storage: [ Frame 0        ][ Frame 1        ] ... [ Frame N-1      ]
+           ↑                 ↑                      ↑
+     fpn=0 * PAGESZ    fpn=1 * PAGESZ         fpn=(N-1) * PAGESZ
+
+  Ví dụ: maxsz=1536, PAGESZ=256 → N = 6 frame
+```
+
+---
+
+## 3. Cơ chế `init_memphy`
+
+```
+init_memphy(mp, max_size=1536, randomflg=1)
+                │
+                ▼
+   ┌────────────────────────┐
+   │ malloc(1536)           │  → mp->storage trỏ vào heap
+   │ mp->maxsz = 1536       │
+   └────────────┬───────────┘
+                │
+                ▼
+   ┌────────────────────────┐
+   │ memset(storage, 0)     │  → xóa dữ liệu rác, [??] → [00]
+   └────────────┬───────────┘
+                │
+                ▼
+   ┌────────────────────────┐    free_fp_list:
+   │ MEMPHY_format(256)     │    [0]→[1]→[2]→[3]→[4]→[5]→NULL
+   │ used_fp_list = NULL    │    used_fp_list: NULL
+   └────────────┬───────────┘
+                │
+                ▼
+   ┌────────────────────────┐
+   │ rdmflg = 1             │  → random access
+   │ (cursor = 0 nếu rdm=0) │  → serial: cần cursor
+   └────────────────────────┘
+```
+
+---
+
+## 4. Cơ chế cấp phát / thu hồi frame
+
+### `MEMPHY_get_freefp` — lấy frame
+
+```
+TRƯỚC                              SAU get_freefp(*retfpn = 0)
+
+free_fp_list                       free_fp_list
+  │                                  │
+  ▼                                  ▼
+[fpn=0]──►[fpn=1]──►[fpn=2]──►NULL [fpn=1]──►[fpn=2]──►NULL
+
+used_fp_list                       used_fp_list
+  │                                  │
+  ▼                                  ▼
+ NULL                              [fpn=0]──►NULL
+
+     node KHÔNG bị free() — được prepend sang used list (O(1))
+```
+
+### `MEMPHY_put_freefp` — trả frame
+
+```
+TRƯỚC                              SAU put_freefp(fpn=0)
+
+used_fp_list                       used_fp_list
+  │                                  │
+  ▼                                  ▼
+[fpn=1]──►[fpn=0]──►NULL           [fpn=1]──►NULL
+                ▲
+            tìm & unlink fpn=0
+                │
+                ▼
+free_fp_list                       free_fp_list
+  │                                  │
+  ▼                                  ▼
+[fpn=2]──►NULL                    [fpn=0]──►[fpn=2]──►NULL
+
+                           prepend O(1) vào free list
+```
+
+---
+
+## 5. Cơ chế đọc / ghi
+
+```
+MEMPHY_read(mp, addr, &value)
+MEMPHY_write(mp, addr, data)
+                │
+                ▼
+         mp->rdmflg ?
+         /           \
+        1              0
+        │              │
+        ▼              ▼
+  Direct access    MEMPHY_seq_r/w
+  storage[addr]        │
+                       ▼
+                  MEMPHY_mv_csr(addr)
+                  cursor: 0 ──► 1 ──► 2 ──► ... ──► addr
+                       │
+                       ▼
+                  storage[addr]
+```
+
+---
+
+## 6. `MEMPHY_dump` — cấu trúc output
+
+```
+=========== MEMPHY DUMP ===========
+  Capacity : 1536 bytes  (6 frames × 256 B/frame)
+  Access   : random
+
+  Free frames : 2 3 4 5  [4 total]
+  Used frames : 1 0       [2 total]
+
+  --- frame storage (hex | ASCII) ---
+  frame    0 [0x000000] : 00 41 00 00 00 00 00 00 ... | .A......
+  frame    1 [0x000100] : 00 00 00 00 00 00 00 00 ... | ........
+  ...
+====================================
+```
+
+---
+
+
 # Phần 2.2.4 — Cơ chế dịch địa chỉ dựa trên Phân trang (Paging)
 
 > **Môn học:** CO2018 — Hệ điều hành  
@@ -123,4 +296,3 @@ Khi trang ở SWAP (PRESENT=1, SWAPPED=1):
 ```
 
 ---
-
