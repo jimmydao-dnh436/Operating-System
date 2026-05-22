@@ -118,6 +118,7 @@ struct pcb_t
 	struct krnl_t *krnl;	
 	struct page_table_t *page_table; // Page table
 	uint32_t bp;			 // Break pointer
+	struct mm_struct *mm;
 };
 
 /* Kernel structure */

@@ -16,6 +16,7 @@
 #define MM_PAGING
 #define PAGING_MAX_MMSWP 4 /* max number of supported swapped space */
 #define PAGING_MAX_SYMTBL_SZ 30
+#define PAGING_MAX_KCACHE_POOLS 10
 
 /* 
  * @bksysnet: in long address mode of 64bit or original 32bit

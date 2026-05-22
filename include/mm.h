@@ -89,7 +89,7 @@
 /* Extract FramePHY Number*/
 #define PAGING_FPN(x)  GETVAL(x,PAGING_PTE_FPN_MASK,PAGING_PTE_FPN_LOBIT)
 /* Extract SWAPFPN */
-#define PAGING_PGN(x)  GETVAL(x,PAGING_PGN_MASK,PAGING_ADDR_PGN_LOBIT)
+#define PAGING_SWP(x)  GETVAL(x,PAGING_PTE_SWPOFF_MASK,PAGING_PTE_SWPOFF_LOBIT)
 /* Extract SWAPTYPE */
 #define PAGING_FPN(x)  GETVAL(x,PAGING_PTE_FPN_MASK,PAGING_PTE_FPN_LOBIT)
 
@@ -102,10 +102,12 @@
 struct vm_rg_struct * init_vm_rg(addr_t rg_start, addr_t rg_end);
 int enlist_vm_rg_node(struct vm_rg_struct **rglist, struct vm_rg_struct* rgnode);
 int enlist_pgn_node(struct pgn_t **pgnlist, addr_t pgn);
+int enlist_vm_freerg_list(struct mm_struct *mm, struct vm_rg_struct *rg_elmt);
 int vmap_pgd_memset(struct pcb_t *caller, addr_t addr, int pgnum);
 addr_t vmap_page_range(struct pcb_t *caller, addr_t addr, int pgnum, 
                     struct framephy_struct *frames, struct vm_rg_struct *ret_rg);
 addr_t vm_map_range(struct pcb_t *caller, addr_t astart, addr_t aend, addr_t mapstart, int incpgnum, struct vm_rg_struct *ret_rg);
+addr_t vm_map_ram(struct pcb_t *caller, addr_t astart, addr_t aend, addr_t mapstart, int incpgnum, struct vm_rg_struct *ret_rg);
 addr_t vm_map_kernel(struct pcb_t *caller, addr_t astart, addr_t aend, addr_t mapstart, int incpgnum, struct vm_rg_struct *ret_rg);
 addr_t alloc_pages_range(struct pcb_t *caller, int incpgnum, struct framephy_struct **frm_lst);
 int __swap_cp_page(struct memphy_struct *mpsrc, addr_t srcfpn,

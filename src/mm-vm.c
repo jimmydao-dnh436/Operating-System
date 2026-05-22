@@ -48,7 +48,41 @@ struct vm_area_struct *get_vma_by_num(struct mm_struct *mm, int vmaid)
 
 int __mm_swap_page(struct pcb_t *caller, addr_t vicfpn , addr_t swpfpn)
 {
-    __swap_cp_page(caller->krnl->mram, vicfpn, caller->krnl->active_mswp, swpfpn);
+    int cellidx;
+    addr_t ram_addr, swp_addr;
+    BYTE ram_data, swp_data;
+
+    /*
+     * Old code kept for reference:
+     * __swap_cp_page(caller->krnl->mram, vicfpn, caller->krnl->active_mswp, swpfpn);
+     * return 0;
+     *
+     * That version only copied RAM -> SWAP in one direction.
+     * The new version swaps both directions so the requested page can be
+     * brought back into RAM through the same syscall path.
+     */
+
+    if (caller == NULL || caller->krnl == NULL ||
+        caller->krnl->mram == NULL || caller->krnl->active_mswp == NULL)
+    {
+        return -1;
+    }
+
+    /* Exchange page contents between one RAM frame and one SWAP frame.
+     * This keeps all device access inside kernel-side code after syscall.
+     */
+    for (cellidx = 0; cellidx < PAGING_PAGESZ; cellidx++)
+    {
+        ram_addr = vicfpn * PAGING_PAGESZ + cellidx;
+        swp_addr = swpfpn * PAGING_PAGESZ + cellidx;
+
+        MEMPHY_read(caller->krnl->mram, ram_addr, &ram_data);
+        MEMPHY_read(caller->krnl->active_mswp, swp_addr, &swp_data);
+
+        MEMPHY_write(caller->krnl->mram, ram_addr, swp_data);
+        MEMPHY_write(caller->krnl->active_mswp, swp_addr, ram_data);
+    }
+
     return 0;
 }
 
@@ -64,7 +98,7 @@ struct vm_rg_struct *get_vm_area_node_at_brk(struct pcb_t *caller, int vmaid, ad
 {
   struct vm_rg_struct * newrg = malloc(sizeof(struct vm_rg_struct));
   /* TODO retrive current vma to obtain newrg, current comment out due to compiler redundant warning*/
-  struct vm_area_struct *cur_vma = get_vma_by_num(caller->krnl->mm, vmaid);
+  struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
   // TODO: update the newrg boundary
   if (cur_vma == NULL)
   {
@@ -88,7 +122,7 @@ struct vm_rg_struct *get_vm_area_node_at_brk(struct pcb_t *caller, int vmaid, ad
  */
 int validate_overlap_vm_area(struct pcb_t *caller, int vmaid, addr_t vmastart, addr_t vmaend)
 {
-  struct vm_area_struct *vma = caller->krnl->mm->mmap;
+  struct vm_area_struct *vma = caller->mm->mmap;
 
   /* TODO validate the planned memory area is not overlapped */
   if (vmastart >= vmaend)
@@ -103,7 +137,7 @@ int validate_overlap_vm_area(struct pcb_t *caller, int vmaid, addr_t vmastart, a
 
   /* TODO validate the planned memory area is not overlapped */
 
-  struct vm_area_struct *cur_area = get_vma_by_num(caller->krnl->mm, vmaid);
+  struct vm_area_struct *cur_area = get_vma_by_num(caller->mm, vmaid);
   if (cur_area == NULL)
   {
     return -1;
@@ -131,7 +165,7 @@ int validate_overlap_vm_area(struct pcb_t *caller, int vmaid, addr_t vmastart, a
 int inc_vma_limit(struct pcb_t *caller, int vmaid, addr_t inc_sz)
 {
   
-  struct vm_area_struct *cur_vma = get_vma_by_num(caller->krnl->mm, vmaid);
+  struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
   /* TOTO with new address scheme, the size need tobe aligned 
    *      the raw inc_sz maybe not fit pagesize
    */
@@ -162,14 +196,14 @@ int inc_vma_limit(struct pcb_t *caller, int vmaid, addr_t inc_sz)
   /* The obtained vm area (only)
    * now will be alloc real ram region */
 
- if (vm_map_ram(caller, old_end, new_end, incnumpage, newrg) < 0) {
+ if (vm_map_ram(caller, old_end, new_end, old_end, incnumpage, newrg) < 0) {
                 return -1; /* Map the memory to MEMRAM */
   }
   
 newrg->rg_start = old_end;
 newrg->rg_end = new_end;
 
-enlist_vm_freerg_list(caller->krnl->mm, newrg);  
+enlist_vm_freerg_list(caller->mm, newrg);  
 
   return 0;
 }

@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(MM64)
 
@@ -100,7 +101,7 @@ int get_pd_from_pagenum(addr_t pgn, addr_t* pgd, addr_t* p4d, addr_t* pud, addr_
 
 addr_t* pte_get_pointer(struct pcb_t* caller, addr_t pgn, int alloc) 
 {
-  struct mm_struct *mm = caller->krnl->mm;
+  struct mm_struct *mm = caller->mm;
 
   addr_t pgd_idx = 0, p4d_idx = 0, pud_idx = 0, pmd_idx = 0, pt_idx = 0;
   get_pd_from_pagenum(pgn, &pgd_idx, &p4d_idx, &pud_idx, &pmd_idx, &pt_idx);
@@ -216,16 +217,25 @@ int pte_set_entry(struct pcb_t *caller, addr_t pgn, uint32_t pte_val)
 /*
  * vmap_pgd_memset - map a range of page at aligned address
  */
-int vmap_pgd_memset(struct pcb_t *caller,           // process call
-                    addr_t addr,                       // start address which is aligned to pagesz
-                    int pgnum)                      // num of mapping page
+int vmap_pgd_memset(struct pcb_t *caller, addr_t addr, int pgnum)
 {
-  //int pgit = 0;
-  //uint64_t pattern = 0xdeadbeef;
+  if (caller == NULL || caller->mm == NULL) return -1;
+  
+  struct mm_struct *mm = caller->mm;
+  for (int i = 0; i < pgnum; i++) {
+      addr_t vaddr = addr + (i * PAGING64_PAGESZ);
+      
+      addr_t pgd_idx = PAGING64_ADDR_PGD(vaddr);
+      addr_t p4d_idx = PAGING64_ADDR_P4D(vaddr);
+      addr_t pud_idx = PAGING64_ADDR_PUD(vaddr);
+      addr_t pmd_idx = PAGING64_ADDR_PMD(vaddr);
+      addr_t pt_idx  = PAGING64_ADDR_PT(vaddr);
 
-  /* TODO memset the page table with given pattern
-   */
-
+      if (mm->pt) {
+          mm->pt[pt_idx] = 0;
+      }
+      // Nếu cần dọn dẹp các cấp trên, logic sẽ phức tạp hơn dựa trên thiết kế bảng.
+  }
   return 0;
 }
 
@@ -244,18 +254,23 @@ addr_t vmap_page_range(struct pcb_t *caller,           // process call
 
   //TODO: update the rg_end and rg_start of ret_rg 
   ret_rg->rg_start =  addr;
-  ret_rg->rg_end = addr + pgnum * PAGING_PAGESZ;
+  ret_rg->rg_end = addr + pgnum * PAGING64_PAGESZ;
 
   for (int pgit = 0; pgit < pgnum && fpit != NULL; pgit++)
     {
       addr_t pgn = pgn_start + pgit;
 
       /* Ghi PTE: pgn → fpit->fpn (khai sinh liên kết trang ảo ↔ frame vật lý) */
-      pte_set_fpn(caller, pgn, fpit->fpn);
+      if (pte_set_fpn(caller, pgn, fpit->fpn) < 0)
+      {
+        return -1;
+      }
+
+      fpit->owner = caller->mm; // Cập nhật thông tin chủ sở hữu của frame vật lý
 
       /* Đưa pgn vào FIFO tracking để page replacement biết thứ tự thời gian */
-      enlist_pgn_node(&caller->krnl->mm->fifo_pgn, pgn);
-
+      enlist_pgn_node(&caller->mm->fifo_pgn, pgn);
+      
       fpit = fpit->fp_next;
     }
 
@@ -287,7 +302,7 @@ addr_t alloc_pages_range(struct pcb_t *caller, int req_pgnum,
     {
       newfp_str = (struct framephy_struct *)malloc(sizeof(struct framephy_struct));
       newfp_str->fpn = fpn;
-      newfp_str->owner = caller->krnl->mm;
+      newfp_str->owner = caller->mm;
       newfp_str->fp_next = *frm_lst;
       *frm_lst = newfp_str;
     }
@@ -341,6 +356,12 @@ addr_t vm_map_ram(struct pcb_t *caller, addr_t astart, addr_t aend, addr_t mapst
    *in endless procedure of swap-off to get frame and we have not provide
    *duplicate control mechanism, keep it simple
    */
+
+  /*Chứa danh sách các frame vật lý được cấp phát cho quá trình gọi (caller) 
+    để ánh xạ vào không gian địa chỉ ảo của tiến trình đó. 
+    Nếu có lỗi trong quá trình cấp phát, nó sẽ trả về mã lỗi -3000 
+    để báo hiệu rằng không đủ bộ nhớ vật lý có sẵn để đáp ứng yêu cầu.
+  */
   ret_alloc = alloc_pages_range(caller, pgnum, &frm_lst);
 
   if (ret_alloc < 0 && ret_alloc != -3000)
@@ -354,6 +375,11 @@ addr_t vm_map_ram(struct pcb_t *caller, addr_t astart, addr_t aend, addr_t mapst
 
   /* it leaves the case of memory is enough but half in ram, half in swap
    * do the swaping all to swapper to get the all in ram */
+
+   /*
+    Ghi PTE: pgn → fpit->fpn (khai sinh liên kết trang ảo ↔ frame vật lý)
+    Đưa pgn vào FIFO tracking để page replacement biết thứ tự thời gian
+   */
    vmap_page_range(caller, mapstart, incpgnum, frm_lst, ret_rg);
 
   return 0;
@@ -391,13 +417,21 @@ int __swap_cp_page(struct memphy_struct *mpsrc, addr_t srcfpn,
 int init_mm(struct mm_struct *mm, struct pcb_t *caller)
 {
   struct vm_area_struct *vma0 = malloc(sizeof(struct vm_area_struct));
+  if (vma0 == NULL) return -1;
 
-  /* TODO init page table directory */
+  /* Init page table directory */
   mm->pgd = calloc(PAGING64_MAX_PGN, sizeof(addr_t));
   mm->p4d = calloc(PAGING64_MAX_PGN, sizeof(addr_t));
   mm->pud = calloc(PAGING64_MAX_PGN, sizeof(addr_t));
   mm->pmd = calloc(PAGING64_MAX_PGN, sizeof(addr_t));
   mm->pt = calloc(PAGING64_MAX_PGN, sizeof(addr_t));
+
+  if (!mm->pgd || !mm->p4d || !mm->pud || !mm->pmd || !mm->pt) {
+      // Memory allocation failed, should free what was allocated
+      free(mm->pgd); free(mm->p4d); free(mm->pud); free(mm->pmd); free(mm->pt);
+      free(vma0);
+      return -1;
+  }
 
   /* By default the owner comes with at least one vma */
   vma0->vm_id = 0;
@@ -407,13 +441,9 @@ int init_mm(struct mm_struct *mm, struct pcb_t *caller)
   struct vm_rg_struct *first_rg = init_vm_rg(vma0->vm_start, vma0->vm_end);
   enlist_vm_rg_node(&vma0->vm_freerg_list, first_rg);
 
-  /* TODO update VMA0 next */
   vma0->vm_next = NULL;
-
-  /* Point vma owner backward */
   vma0->vm_mm = mm;
 
-  /* TODO: update mmap */
   mm->mmap = vma0;
   memset(mm->symrgtbl, 0, sizeof(mm->symrgtbl)); 
   mm->kcpooltbl = NULL;
