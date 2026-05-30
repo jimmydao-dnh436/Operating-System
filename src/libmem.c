@@ -788,7 +788,7 @@ static int check_memory_access(struct pcb_t *caller, addr_t vaddr, uint32_t pte,
         printf("Memory Access Violation: Non-canonical address 0x%016lx\n", (unsigned long)vaddr);
         return -1;
     }
-    
+
     if (!is_kernel_access && !PAGING_PAGE_IS_USER(pte)) {
         printf("Memory Access Violation: User process accessing Kernel page 0x%016lx\n", (unsigned long)vaddr);
         return -1;

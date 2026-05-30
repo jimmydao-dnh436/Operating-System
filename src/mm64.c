@@ -288,6 +288,7 @@ addr_t vmap_page_range(struct pcb_t *caller,           // process call
   return 0;
 }
 
+
 /*
  * alloc_pages_range - allocate req_pgnum of frame in ram
  * @caller    : caller
@@ -302,13 +303,9 @@ addr_t alloc_pages_range(struct pcb_t *caller, int req_pgnum,
   int pgit;
   struct framephy_struct *newfp_str = NULL;
 
-  /* TODO: allocate the page 
-  //caller-> ...
-  //frm_lst-> ...
-  */
   for (pgit = 0; pgit < req_pgnum; pgit++)
   {
-    // TODO: allocate the page 
+    // Try to get a free frame
     if (MEMPHY_get_freefp(caller->krnl->mram, &fpn) == 0)
     {
       newfp_str = (struct framephy_struct *)malloc(sizeof(struct framephy_struct));
@@ -318,28 +315,20 @@ addr_t alloc_pages_range(struct pcb_t *caller, int req_pgnum,
       *frm_lst = newfp_str;
     }
     else
-    { // TODO: ERROR CODE of obtaining somes but not enough frames
-      
+    { 
+      // If RAM full, clean up and return error
       struct framephy_struct *temp = *frm_lst;
       while (temp != NULL) 
       {
           struct framephy_struct *next_node = temp->fp_next;
-          
-          /* 1. Trả lại Frame vật lý cho kho RAM (MEMPHY_put_freefp) */
           MEMPHY_put_freefp(caller->krnl->mram, temp->fpn);
-          
-          /* 2. Giải phóng bộ nhớ của Node đã malloc ở trên */
           free(temp);
-          
           temp = next_node;
       }
-      
-      /* Reset lại danh sách về NULL*/
       *frm_lst = NULL;
       return -3000;
     }
   }
-  /* End TODO */
 
   return 0;
 }
