@@ -221,20 +221,15 @@ int vmap_pgd_memset(struct pcb_t *caller, addr_t addr, int pgnum)
 {
   if (caller == NULL || caller->mm == NULL) return -1;
   
-  struct mm_struct *mm = caller->mm;
   for (int i = 0; i < pgnum; i++) {
       addr_t vaddr = addr + (i * PAGING64_PAGESZ);
+      addr_t pgn = vaddr >> PAGING64_ADDR_PT_SHIFT;
       
-      addr_t pgd_idx = PAGING64_ADDR_PGD(vaddr);
-      addr_t p4d_idx = PAGING64_ADDR_P4D(vaddr);
-      addr_t pud_idx = PAGING64_ADDR_PUD(vaddr);
-      addr_t pmd_idx = PAGING64_ADDR_PMD(vaddr);
-      addr_t pt_idx  = PAGING64_ADDR_PT(vaddr);
-
-      if (mm->pt) {
-          mm->pt[pt_idx] = 0;
+      // Lấy con trỏ đến PTE thực tế
+      addr_t *pte_ptr = pte_get_pointer(caller, pgn, 0); 
+      if (pte_ptr != NULL) {
+          *pte_ptr = 0; // Reset PTE
       }
-      // Nếu cần dọn dẹp các cấp trên, logic sẽ phức tạp hơn dựa trên thiết kế bảng.
   }
   return 0;
 }
@@ -249,21 +244,35 @@ addr_t vmap_page_range(struct pcb_t *caller,           // process call
                     struct vm_rg_struct *ret_rg)    // return mapped region, the real mapped fp
 {                                                   // no guarantee all given pages are mapped
   struct framephy_struct *fpit = frames;
-  int pgit = 0;
-  addr_t pgn_start = PAGING_PGN(addr);
+  addr_t pgn_start = addr >> PAGING64_ADDR_PT_SHIFT;
 
-  //TODO: update the rg_end and rg_start of ret_rg 
-  ret_rg->rg_start =  addr;
-  ret_rg->rg_end = addr + pgnum * PAGING64_PAGESZ;
+  ret_rg->rg_start = addr;
 
   for (int pgit = 0; pgit < pgnum && fpit != NULL; pgit++)
     {
       addr_t pgn = pgn_start + pgit;
+      addr_t vaddr = pgn << PAGING64_ADDR_PT_SHIFT;
 
       /* Ghi PTE: pgn → fpit->fpn (khai sinh liên kết trang ảo ↔ frame vật lý) */
       if (pte_set_fpn(caller, pgn, fpit->fpn) < 0)
       {
         return -1;
+      }
+
+      addr_t *pte = pte_get_pointer(caller, pgn, 0); 
+      
+      if (pte != NULL) {
+          // 1. Kiểm tra Canonical Hole
+          if (vaddr > USER_SPACE_END && vaddr < KERNEL_SPACE_START) {
+              return -1; 
+          }
+          
+          // 2. Thiết lập Mode bit
+          if (vaddr <= USER_SPACE_END) {
+              PAGING_PTE_SET_USER(*pte);    // Nửa dưới (User) -> Bật U/S bit
+          } else {
+              PAGING_PTE_SET_KERNEL(*pte);  // Nửa trên (Kernel) -> Tắt U/S bit
+          }
       }
 
       fpit->owner = caller->mm; // Cập nhật thông tin chủ sở hữu của frame vật lý
@@ -273,6 +282,8 @@ addr_t vmap_page_range(struct pcb_t *caller,           // process call
       
       fpit = fpit->fp_next;
     }
+  
+    ret_rg->rg_end = addr + pgnum * PAGING64_PAGESZ;
 
   return 0;
 }

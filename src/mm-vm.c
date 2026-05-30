@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
+#include "mm64.h"
 
 /*get_vma_by_num - get vm area by numID
  *@mm: memory region
@@ -185,6 +186,11 @@ int inc_vma_limit(struct pcb_t *caller, int vmaid, addr_t inc_sz)
 
   addr_t old_end = cur_vma->vm_end;
   addr_t new_end = old_end + aligned_sz;
+
+  if (new_end > USER_SPACE_END) {
+        printf("[LỖI MEMORY] Tiến trình %d yêu cầu cấp phát vượt quá giới hạn User Space (0x00007FFFFFFFFFFF)!\n", caller->pid);
+        return -1;
+    }
 
   /* TODO Validate overlap of obtained region */
   if (validate_overlap_vm_area(caller, vmaid, newrg->rg_start, newrg->rg_end) < 0)

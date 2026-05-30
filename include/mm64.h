@@ -2,6 +2,20 @@
 #define MM64_H
 
 #include "mm.h"
+
+/* ================== MEMORY BOUNDARY (LINUX 64-BIT) ================== */
+#define USER_SPACE_END     0x00007FFFFFFFFFFFULL
+#define KERNEL_SPACE_START 0xFFFF800000000000ULL
+
+/* ================== MODE BIT (U/S BIT - BIT 2) ====================== */
+// 1 = User Page (Cả Kernel và User đều truy cập được)
+// 0 = Supervisor Page (Chỉ Kernel mới truy cập được)
+#define PAGING_PTE_USER_MASK BIT(2)
+
+#define PAGING_PTE_SET_USER(pte)    (pte = (pte) | PAGING_PTE_USER_MASK)
+#define PAGING_PTE_SET_KERNEL(pte)  (pte = (pte) & ~PAGING_PTE_USER_MASK)
+#define PAGING_PAGE_IS_USER(pte)    ((pte) & PAGING_PTE_USER_MASK)
+
 #define MM64_BITS_PER_LONG 64
 
 #define PAGING64_CPU_BUS_WIDTH 57 /* 57 bit bus - MAX SPACE 4MB */
