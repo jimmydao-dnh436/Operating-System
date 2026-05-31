@@ -1,11 +1,10 @@
 #include "queue.h"
 #include "sched.h"
+#include "os-cfg.h"
 #include <pthread.h>
 
 #include <stdlib.h>
 #include <stdio.h>
-
-#define MAX_PRIO 3
 
 static struct queue_t ready_queue;
 static struct queue_t run_queue;

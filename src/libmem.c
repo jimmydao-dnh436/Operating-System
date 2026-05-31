@@ -553,17 +553,8 @@ addr_t __kmalloc(struct pcb_t *caller, int vmaid, int rgid, addr_t size, addr_t 
         addr_t current_vaddr = vaddr + (i * PAGING64_PAGESZ);
         addr_t pgn = current_vaddr >> PAGING64_ADDR_PT_SHIFT;
         /* Sử dụng hệ thống 5 cấp đã khai báo trong krnl_t */
-        // Hàm get_pte_ptr sẽ dựa trên PAGING64_PAGESZ để bóc tách bit địa chỉ[cite: 2]
-        uint64_t *pte = get_pte_ptr(caller, pgn, 1);
-
-        if (pte != NULL) {
-            if (pte_set_fpn(caller, pgn, fpn) != 0) {
-                return -1; // Lỗi: Không thể ánh xạ trang ảo vào bảng trang
-            }
-            // Bật bit Present để MMU nhận diện trang hợp lệ
-            PAGING_PTE_SET_PRESENT(*pte);
-        } else {
-            return -1;
+        if (pte_set_fpn(caller, pgn, fpn) != 0) {
+            return -1; // Lỗi: Không thể ánh xạ trang ảo vào bảng trang
         }
     }
 

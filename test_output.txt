@@ -1,0 +1,84 @@
+DEBUG: num_processes=4
+DEBUG: Memory config loaded: ram=268435456, swp0=16777216
+DEBUG: Loaded process 0: time=0, path=input/proc/p0s
+DEBUG: Loaded process 1: time=1, path=input/proc/p1s
+DEBUG: Loaded process 2: time=3, path=input/proc/p1s
+DEBUG: Loaded process 3: time=6, path=input/proc/p0s
+Time slot   0
+ld_routine
+	Loaded a process at input/proc/p0s, PID: 1 PRIO: 0
+Time slot   1
+	CPU 1: Dispatched process  1
+	Loaded a process at input/proc/p1s, PID: 2 PRIO: 15
+Time slot   2
+liballoc:193
+	CPU 0: Dispatched process  2
+Time slot   3
+liballoc:193
+	Loaded a process at input/proc/p1s, PID: 3 PRIO: 0
+Time slot   4
+libfree:217
+Time slot   5
+liballoc:193
+Time slot   6
+libwrite:472
+	Loaded a process at input/proc/p0s, PID: 4 PRIO: 0
+Time slot   7
+	CPU 1: Put process  1 to run queue
+	CPU 1: Dispatched process  3
+Time slot   8
+	CPU 0: Put process  2 to run queue
+	CPU 0: Dispatched process  4
+Time slot   9
+liballoc:193
+Time slot  10
+liballoc:193
+Time slot  11
+libfree:217
+Time slot  12
+liballoc:193
+Time slot  13
+	CPU 1: Put process  3 to run queue
+	CPU 1: Dispatched process  1
+libread:410
+libread:417
+libwrite:472
+Time slot  14
+	CPU 0: Put process  4 to run queue
+	CPU 0: Dispatched process  3
+libwrite:472
+Time slot  15
+libread:410
+Time slot  16
+libwrite:472
+Time slot  17
+libread:410
+Time slot  18
+	CPU 0: Processed  3 has finished
+	CPU 0: Dispatched process  4
+libread:410
+libread:417
+Time slot  19
+	CPU 1: Put process  1 to run queue
+	CPU 1: Dispatched process  1
+libfree:217
+libwrite:472
+Time slot  20
+libread:410
+Time slot  21
+libwrite:472
+	CPU 1: Processed  1 has finished
+	CPU 1: Dispatched process  2
+Time slot  22
+libread:410
+Time slot  23
+Time slot  24
+	CPU 0: Put process  4 to run queue
+	CPU 0: Dispatched process  4
+libfree:217
+Time slot  25
+	CPU 1: Processed  2 has finished
+	CPU 1 stopped
+Time slot  26
+	CPU 0: Processed  4 has finished
+	CPU 0 stopped

@@ -414,39 +414,40 @@ int __swap_cp_page(struct memphy_struct *mpsrc, addr_t srcfpn,
  * @mm:     self mm
  * @caller: mm owner
  */
+// 
 int init_mm(struct mm_struct *mm, struct pcb_t *caller)
 {
-  struct vm_area_struct *vma0 = malloc(sizeof(struct vm_area_struct));
-  if (vma0 == NULL) return -1;
+  if (mm == NULL) return -1;
 
-  /* Init page table directory */
-  mm->pgd = calloc(PAGING64_MAX_PGN, sizeof(addr_t));
-  mm->p4d = calloc(PAGING64_MAX_PGN, sizeof(addr_t));
-  mm->pud = calloc(PAGING64_MAX_PGN, sizeof(addr_t));
-  mm->pmd = calloc(PAGING64_MAX_PGN, sizeof(addr_t));
-  mm->pt = calloc(PAGING64_MAX_PGN, sizeof(addr_t));
+  // Sử dụng calloc để đảm bảo các con trỏ bảng trang ban đầu đều là NULL
+  mm->pgd = malloc(PAGING64_MAX_PGN * sizeof(addr_t));
+  mm->p4d = malloc(PAGING64_MAX_PGN * sizeof(addr_t));
+  mm->pud = malloc(PAGING64_MAX_PGN * sizeof(addr_t));
+  mm->pmd = malloc(PAGING64_MAX_PGN * sizeof(addr_t));
+  mm->pt  = malloc(PAGING64_MAX_PGN * sizeof(addr_t));
 
   if (!mm->pgd || !mm->p4d || !mm->pud || !mm->pmd || !mm->pt) {
-      // Memory allocation failed, should free what was allocated
-      free(mm->pgd); free(mm->p4d); free(mm->pud); free(mm->pmd); free(mm->pt);
-      free(vma0);
-      return -1;
+     printf("[LỖI] init_mm: Không đủ bộ nhớ để cấp phát bảng trang!\n");
+     return -1;
   }
 
-  /* By default the owner comes with at least one vma */
-  vma0->vm_id = 0;
-  vma0->vm_start = 0;
-  vma0->vm_end = vma0->vm_start;
-  vma0->sbrk = vma0->vm_start;
-  struct vm_rg_struct *first_rg = init_vm_rg(vma0->vm_start, vma0->vm_end);
-  enlist_vm_rg_node(&vma0->vm_freerg_list, first_rg);
+  memset(mm->pgd, 0, PAGING64_MAX_PGN * sizeof(addr_t));
+  memset(mm->p4d, 0, PAGING64_MAX_PGN * sizeof(addr_t));
+  memset(mm->pud, 0, PAGING64_MAX_PGN * sizeof(addr_t));
+  memset(mm->pmd, 0, PAGING64_MAX_PGN * sizeof(addr_t));
+  memset(mm->pt,  0, PAGING64_MAX_PGN * sizeof(addr_t));
 
-  vma0->vm_next = NULL;
-  vma0->vm_mm = mm;
+  // Khởi tạo vùng nhớ ảo mmap
+  mm->mmap = malloc(sizeof(struct vm_area_struct));
+  if (mm->mmap != NULL) {
+     mm->mmap->vm_id = 0;
+     mm->mmap->vm_start = 0;
+     mm->mmap->vm_end = 0; // Khởi tạo ban đầu là 0 (heap rỗng)
+     mm->mmap->sbrk = 0;
+     mm->mmap->vm_freerg_list = NULL;
+     mm->mmap->vm_next = NULL;
+  }
 
-  mm->mmap = vma0;
-  memset(mm->symrgtbl, 0, sizeof(mm->symrgtbl)); 
-  mm->kcpooltbl = NULL;
   mm->fifo_pgn = NULL;
 
   return 0;

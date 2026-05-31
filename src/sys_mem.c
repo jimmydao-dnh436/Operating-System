@@ -53,6 +53,11 @@ int __sys_memmap(struct krnl_t *krnl, uint32_t pid, struct sc_regs* regs)
     /* user process are not allowed to access directly pcb in kernel space of syscall */
     //....
 	
+   if (caller == NULL) {
+       printf("[ERROR] sys_memmap: Cannot find process %d in running_list!\n", pid);
+       return -1;
+   }
+
    switch (memop) {
    case SYSMEM_MAP_OP:
             /* Reserved process case*/
@@ -65,11 +70,11 @@ int __sys_memmap(struct krnl_t *krnl, uint32_t pid, struct sc_regs* regs)
             __mm_swap_page(caller, regs->a2, regs->a3);
             break;
    case SYSMEM_IO_READ:
-            MEMPHY_read(caller->krnl->mram, regs->a2, &value);
+            MEMPHY_read(krnl->mram, regs->a2, &value);
             regs->a3 = value;
             break;
    case SYSMEM_IO_WRITE:
-            MEMPHY_write(caller->krnl->mram, regs->a2, regs->a3);
+            MEMPHY_write(krnl->mram, regs->a2, regs->a3);
             break;
    default:
             printf("Memop code: %d\n", memop);

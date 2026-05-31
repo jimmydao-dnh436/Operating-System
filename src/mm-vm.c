@@ -184,7 +184,7 @@ int inc_vma_limit(struct pcb_t *caller, int vmaid, addr_t inc_sz)
     return -1;
   }
 
-  addr_t old_end = cur_vma->vm_end;
+  addr_t old_end = cur_vma->sbrk;
   addr_t new_end = old_end + aligned_sz;
 
   if (new_end > USER_SPACE_END) {
