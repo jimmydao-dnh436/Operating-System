@@ -177,13 +177,15 @@ static void * ld_routine(void * args) {
 }
 
 static void read_config(const char *path) {
-    FILE *file = fopen(path, "r");
+    /* Open in binary mode ("rb") so ftell/fseek work reliably with exact byte offsets on Windows/Linux. */
+    FILE *file = fopen(path, "rb");
     if (!file) {
         printf("Cannot find configure file at %s\n", path);
         exit(1);
     }
 
     char line[512];
+
     // 1. Read header: time_slot, num_cpus, num_processes
     if (!fgets(line, sizeof(line), file)) exit(1);
     sscanf(line, "%d %d %d", &time_slot, &num_cpus, &num_processes);
@@ -195,11 +197,15 @@ static void read_config(const char *path) {
 #endif
 
 #ifdef MM_PAGING
-    // 2. Read memory config line
+    // 2. Try to read optional memory config line (5 numbers: ram swp0..swp3)
+    long pos = ftell(file);
     if (fgets(line, sizeof(line), file)) {
-        if (sscanf(line, "%lu %lu %lu %lu %lu", &memramsz, &memswpsz[0], &memswpsz[1], &memswpsz[2], &memswpsz[3]) != 5) {
-            fseek(file, -strlen(line), SEEK_CUR);
-            memramsz = 0x1000000;
+        if (sscanf(line, "%lu %lu %lu %lu %lu",
+                   &memramsz, &memswpsz[0], &memswpsz[1],
+                   &memswpsz[2], &memswpsz[3]) != 5) {
+            /* Not a memory config — rewind exactly (binary mode, so safe) */
+            fseek(file, pos, SEEK_SET);
+            memramsz    = 0x1000000;
             memswpsz[0] = 0x1000000;
         }
     }
@@ -276,7 +282,7 @@ int main(int argc, char * argv[]) {
 	mm_ld_args->mram = (struct memphy_struct *) &mram;
 	mm_ld_args->mswp = (struct memphy_struct**) &mswp;
 	mm_ld_args->active_mswp = (struct memphy_struct *) &mswp[0];
-        mm_ld_args->active_mswp_id = 0;
+    mm_ld_args->active_mswp_id = 0;
 
 
 #endif

@@ -11,12 +11,12 @@ Time slot   4
 	CPU 0: Dispatched process  2
 liballoc:193
 print_pgtbl:
- PDG=0000024eb411b0d0 P4g=0000024eb411c0e0 PUD=0000024eb411d0f0 PMD=0000024eb411e100
+ PDG=000002724447a1d0 P4g=000002724560c020 PUD=000002724560a000 PMD=000002724560d030
 Time slot   5
+	Loaded a process at input/proc/s2, PID: 3 PRIO: 3
 liballoc:193
 print_pgtbl:
- PDG=0000024eb411b0d0 P4g=0000024eb411c0e0 PUD=0000024eb411d0f0 PMD=0000024eb411e100
-	Loaded a process at input/proc/s2, PID: 3 PRIO: 3
+ PDG=000002724447a1d0 P4g=000002724560c020 PUD=000002724560a000 PMD=000002724560d030
 Time slot   6
 	CPU 0: Put process  2 to run queue
 	CPU 0: Dispatched process  1
@@ -25,12 +25,12 @@ Time slot   8
 	CPU 0: Put process  1 to run queue
 	CPU 0: Dispatched process  3
 Time slot   9
-Time slot  10
 	CPU 0: Put process  3 to run queue
 	CPU 0: Dispatched process  2
 libfree:217
 print_pgtbl:
- PDG=0000024eb411b0d0 P4g=0000024eb411c0e0 PUD=0000024eb411d0f0 PMD=0000024eb411e100
+ PDG=000002724447a1d0 P4g=000002724560c020 PUD=000002724560a000 PMD=000002724560d030
+Time slot  10
 Time slot  11
 	Loaded a process at input/proc/m2s, PID: 4 PRIO: 2
 Time slot  12
@@ -38,17 +38,17 @@ Time slot  12
 	CPU 0: Dispatched process  4
 liballoc:193
 print_pgtbl:
- PDG=0000024eb52affe0 P4g=0000024eb52adfc0 PUD=0000024eb52acfb0 PMD=0000024eb52b2000
+ PDG=0000027245611070 P4g=0000027245610060 PUD=00000272456170d0 PMD=00000272456150b0
 Time slot  13
 liballoc:193
 print_pgtbl:
- PDG=0000024eb52affe0 P4g=0000024eb52adfc0 PUD=0000024eb52acfb0 PMD=0000024eb52b2000
+ PDG=0000027245611070 P4g=0000027245610060 PUD=00000272456170d0 PMD=00000272456150b0
 Time slot  14
 	CPU 0: Put process  4 to run queue
 	CPU 0: Dispatched process  4
 libfree:217
 print_pgtbl:
- PDG=0000024eb52affe0 P4g=0000024eb52adfc0 PUD=0000024eb52acfb0 PMD=0000024eb52b2000
+ PDG=0000027245611070 P4g=0000027245610060 PUD=00000272456170d0 PMD=00000272456150b0
 Time slot  15
 Time slot  16
 	CPU 0: Put process  4 to run queue
@@ -83,7 +83,7 @@ Time slot  29
 	CPU 0: Dispatched process  4
 libfree:217
 print_pgtbl:
- PDG=0000024eb52affe0 P4g=0000024eb52adfc0 PUD=0000024eb52acfb0 PMD=0000024eb52b2000
+ PDG=0000027245611070 P4g=0000027245610060 PUD=00000272456170d0 PMD=00000272456150b0
 Time slot  30
 Time slot  31
 	CPU 0: Processed  4 has finished
@@ -133,7 +133,7 @@ Time slot  52
 	CPU 0: Dispatched process  2
 libfree:217
 print_pgtbl:
- PDG=0000024eb411b0d0 P4g=0000024eb411c0e0 PUD=0000024eb411d0f0 PMD=0000024eb411e100
+ PDG=000002724447a1d0 P4g=000002724560c020 PUD=000002724560a000 PMD=000002724560d030
 Time slot  53
 Time slot  54
 	CPU 0: Processed  2 has finished

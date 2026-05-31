@@ -12,8 +12,8 @@ Time slot   3
 Time slot   4
 Time slot   5
 	CPU 0: Put process  2 to run queue
-	Loaded a process at input/proc/s1, PID: 4 PRIO: 0
 	CPU 0: Dispatched process  3
+	Loaded a process at input/proc/s1, PID: 4 PRIO: 0
 Time slot   6
 	Loaded a process at input/proc/s3, PID: 5 PRIO: 0
 Time slot   7
