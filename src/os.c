@@ -187,7 +187,6 @@ static void read_config(const char *path) {
     // 1. Read header: time_slot, num_cpus, num_processes
     if (!fgets(line, sizeof(line), file)) exit(1);
     sscanf(line, "%d %d %d", &time_slot, &num_cpus, &num_processes);
-    printf("DEBUG: num_processes=%d\n", num_processes);
 
     ld_processes.path = (char **)malloc(sizeof(char *) * num_processes);
     ld_processes.start_time = (unsigned long *)malloc(sizeof(unsigned long) * num_processes);
@@ -198,13 +197,10 @@ static void read_config(const char *path) {
 #ifdef MM_PAGING
     // 2. Read memory config line
     if (fgets(line, sizeof(line), file)) {
-        if (sscanf(line, "%lu %lu %lu %lu %lu", &memramsz, &memswpsz[0], &memswpsz[1], &memswpsz[2], &memswpsz[3]) == 5) {
-            printf("DEBUG: Memory config loaded: ram=%lu, swp0=%lu\n", memramsz, memswpsz[0]);
-        } else {
+        if (sscanf(line, "%lu %lu %lu %lu %lu", &memramsz, &memswpsz[0], &memswpsz[1], &memswpsz[2], &memswpsz[3]) != 5) {
             fseek(file, -strlen(line), SEEK_CUR);
             memramsz = 0x1000000;
             memswpsz[0] = 0x1000000;
-            printf("DEBUG: Memory config NOT found\n");
         }
     }
 #endif
@@ -226,7 +222,6 @@ static void read_config(const char *path) {
 #endif
             ld_processes.path[i] = (char *)malloc(100);
             sprintf(ld_processes.path[i], "input/proc/%s", proc);
-            printf("DEBUG: Loaded process %d: time=%lu, path=%s\n", i, ld_processes.start_time[i], ld_processes.path[i]);
             i++;
         }
     }

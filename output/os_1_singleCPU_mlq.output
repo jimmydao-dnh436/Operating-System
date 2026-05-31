@@ -1,0 +1,13 @@
+DEBUG: num_processes=8
+DEBUG: Memory config NOT found
+DEBUG: Loaded process 0: time=2, path=input/proc/1
+DEBUG: Loaded process 1: time=0, path=input/proc/p1s
+DEBUG: Loaded process 2: time=1, path=input/proc/s4
+DEBUG: Loaded process 3: time=3, path=input/proc/s1
+DEBUG: Loaded process 4: time=4, path=input/proc/m0s
+DEBUG: Loaded process 5: time=6, path=input/proc/s0
+DEBUG: Loaded process 6: time=7, path=input/proc/s3
+DEBUG: Loaded process 7: time=9, path=input/proc/m1s
+Time slot   0
+ld_routine
+Cannot find process description at 'input/proc/1'

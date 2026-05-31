@@ -419,23 +419,25 @@ int init_mm(struct mm_struct *mm, struct pcb_t *caller)
 {
   if (mm == NULL) return -1;
 
-  // Sử dụng calloc để đảm bảo các con trỏ bảng trang ban đầu đều là NULL
-  mm->pgd = malloc(PAGING64_MAX_PGN * sizeof(addr_t));
-  mm->p4d = malloc(PAGING64_MAX_PGN * sizeof(addr_t));
-  mm->pud = malloc(PAGING64_MAX_PGN * sizeof(addr_t));
-  mm->pmd = malloc(PAGING64_MAX_PGN * sizeof(addr_t));
-  mm->pt  = malloc(PAGING64_MAX_PGN * sizeof(addr_t));
+  /* pgd là mảng root của cây phân trang 5 cấp.
+   * Các sub-table (P4D, PUD, PMD, PT) được cấp phát động trong
+   * pte_get_pointer() khi cần — không cần mảng phẳng ở đây.
+   * Dùng calloc để đảm bảo mọi con trỏ ban đầu là NULL (0),
+   * vì pte_get_pointer() kiểm tra `pgd[idx] == 0` để biết cần calloc sub-table. */
+  mm->pgd = calloc(PAGING64_MAX_PGN, sizeof(addr_t));
 
-  if (!mm->pgd || !mm->p4d || !mm->pud || !mm->pmd || !mm->pt) {
+  /* Các trường p4d/pud/pmd/pt trong mm_struct chỉ được giữ cho backward compat
+   * với code MM32; trong MM64 chúng không được pte_get_pointer dùng.
+   * Đặt NULL để tránh truy cập rác. */
+  mm->p4d = NULL;
+  mm->pud = NULL;
+  mm->pmd = NULL;
+  mm->pt  = NULL;
+
+  if (!mm->pgd) {
      printf("[LỖI] init_mm: Không đủ bộ nhớ để cấp phát bảng trang!\n");
      return -1;
   }
-
-  memset(mm->pgd, 0, PAGING64_MAX_PGN * sizeof(addr_t));
-  memset(mm->p4d, 0, PAGING64_MAX_PGN * sizeof(addr_t));
-  memset(mm->pud, 0, PAGING64_MAX_PGN * sizeof(addr_t));
-  memset(mm->pmd, 0, PAGING64_MAX_PGN * sizeof(addr_t));
-  memset(mm->pt,  0, PAGING64_MAX_PGN * sizeof(addr_t));
 
   // Khởi tạo vùng nhớ ảo mmap
   mm->mmap = malloc(sizeof(struct vm_area_struct));
@@ -547,19 +549,28 @@ int print_list_pgn(struct pgn_t *ip)
 
 int print_pgtbl(struct pcb_t *caller, addr_t start, addr_t end)
 {
-//addr_t pgn_start;//, pgn_end;
-//addr_t pgit;
-//struct krnl_t *krnl = caller->krnl;
+  if (caller == NULL || caller->mm == NULL || caller->mm->pgd == NULL)
+    return -1;
 
-  addr_t pgd=0;
-  addr_t p4d=0;
-  addr_t pud=0;
-  addr_t pmd=0;
-  addr_t pt=0;
+  struct mm_struct *mm = caller->mm;
 
-  get_pd_from_address(start, &pgd, &p4d, &pud, &pmd, &pt);
+  /* Lấy chỉ số vào các cấp từ địa chỉ `start` */
+  addr_t pgd_idx = 0, p4d_idx = 0, pud_idx = 0, pmd_idx = 0, pt_idx = 0;
+  get_pd_from_address(start, &pgd_idx, &p4d_idx, &pud_idx, &pmd_idx, &pt_idx);
 
-  /* TODO traverse the page map and dump the page directory entries */
+  /* Traverse cây: lấy CON TRỎ đến từng sub-table */
+  addr_t *p4d_tbl = (addr_t *)mm->pgd[pgd_idx];
+  addr_t *pud_tbl = (p4d_tbl != NULL) ? (addr_t *)p4d_tbl[p4d_idx] : NULL;
+  addr_t *pmd_tbl = (pud_tbl != NULL) ? (addr_t *)pud_tbl[pud_idx] : NULL;
+  addr_t *pt_tbl  = (pmd_tbl != NULL) ? (addr_t *)pmd_tbl[pmd_idx] : NULL;
+
+  printf("print_pgtbl:\n");
+  /* In địa chỉ của các sub-table đã cấp phát (không phải index) */
+  printf(" PDG=%p P4g=%p PUD=%p PMD=%p\n",
+         (void*)p4d_tbl,   /* địa chỉ P4D table (trỏ bởi pgd[pgd_idx]) */
+         (void*)pud_tbl,   /* địa chỉ PUD table (trỏ bởi p4d[p4d_idx]) */
+         (void*)pmd_tbl,   /* địa chỉ PMD table (trỏ bởi pud[pud_idx]) */
+         (void*)pt_tbl);   /* địa chỉ PT  table (trỏ bởi pmd[pmd_idx]) */
 
   return 0;
 }
