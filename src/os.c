@@ -102,6 +102,7 @@ static void * cpu_routine(void * args) {
 	}
 	detach_event(timer_id);
 	pthread_exit(NULL);
+	return NULL;
 }
 
 static void * ld_routine(void * args) {
@@ -147,7 +148,8 @@ static void * ld_routine(void * args) {
 	printf("ld_routine\n");
 	while (i < num_processes) {
 		struct pcb_t * proc = load(ld_processes.path[i]);
-		struct krnl_t * krnl = proc->krnl = &os;	
+		// struct krnl_t * krnl = proc->krnl = &os;	
+		proc->krnl = &os;
 
 #ifdef MLQ_SCHED
 		proc->prio = ld_processes.prio[i];
@@ -174,6 +176,7 @@ static void * ld_routine(void * args) {
 	done = 1;
 	detach_event(timer_id);
 	pthread_exit(NULL);
+	return NULL;
 }
 
 static void read_config(const char *path) {

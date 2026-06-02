@@ -5,7 +5,6 @@ Time slot   2
 	Loaded a process at input/proc/sc3, PID: 1 PRIO: 15
 Time slot   3
 	CPU 0: Dispatched process  1
-Thefirstsystemcallparameter1
 Time slot   4
 	CPU 0: Processed  1 has finished
 	CPU 0 stopped

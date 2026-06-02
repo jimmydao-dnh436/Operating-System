@@ -1,11 +1,19 @@
+/*
+ * Copyright (C) 2026 pdnguyen of HCMC University of Technology VNU-HCM
+ */
+
+/* LamiaAtrium release
+ * Source Code License Grant: The authors hereby grant to Licensee
+ * personal permission to use and modify the Licensed Source Code
+ * for the sole purpose of studying while attending the course CO2018.
+ */
+
 #include "queue.h"
 #include "sched.h"
-#include "os-cfg.h"
 #include <pthread.h>
 
 #include <stdlib.h>
 #include <stdio.h>
-
 static struct queue_t ready_queue;
 static struct queue_t run_queue;
 static pthread_mutex_t queue_lock;
@@ -59,38 +67,43 @@ struct pcb_t *get_mlq_proc(void)
     /*TODO: get a process from PRIORITY [ready_queue].
      *      It worth to protect by a mechanism.
      * */
-
-    /* Duyệt tìm tiến trình dựa trên priority và slot */
+    //Kiem tra xem co process nao trong mlq_ready_queue khong
+    int has_process = 0;
     for (int i = 0; i < MAX_PRIO; i++) {
-        // Kiểm tra nếu hàng đợi i không rỗng và còn slot 
+        if (!empty(&mlq_ready_queue[i])) {
+            has_process = 1;
+            break;
+        }
+    }
+    //Neu co process trong mlq_ready_queue thi kiem tra xem con slot nao khong, neu het slot thi reset lai slot
+    if (has_process) {
+        int out_of_slots = 1;
+        for (int i = 0; i < MAX_PRIO; i++) {
+            if (!empty(&mlq_ready_queue[i]) && slot[i] > 0) {
+                out_of_slots = 0;
+                break;
+            }
+        }
+
+        if (out_of_slots) {
+            for (int i = 0; i < MAX_PRIO; i++) {
+                slot[i] = MAX_PRIO - i;
+            }
+        }
+    }
+    //Chon process co priority cao nhat va con slot
+    for (int i = 0; i < MAX_PRIO; i++) {
         if (!empty(&mlq_ready_queue[i]) && slot[i] > 0) {
             proc = dequeue(&mlq_ready_queue[i]); 
-            slot[i]--; // Giảm slot của hàng đợi đã chọn 
+            slot[i]--; 
             break;
         }
     }
 
-    /* Nếu không tìm thấy tiến trình nào (có thể do tất cả hàng đợi đều hết slot)  */
-    if (proc == NULL && !queue_empty()) {
-        // Reset lại slot cho tất cả các mức ưu tiên 
-        for (int i = 0; i < MAX_PRIO; i++) {
-            slot[i] = MAX_PRIO - i; 
-        }
-
-        // Sau khi reset, duyệt lại một lần nữa để lấy tiến trình
-        for (int i = 0; i < MAX_PRIO; i++) {
-            if (!empty(&mlq_ready_queue[i]) && slot[i] > 0) {
-                proc = dequeue(&mlq_ready_queue[i]);
-                slot[i]--;
-                break;
-            }
-        }
-    }
-
-    pthread_mutex_unlock(&queue_lock); // Giải phóng khóa 
-
     if (proc != NULL)
         enqueue(&running_list, proc);
+
+    pthread_mutex_unlock(&queue_lock); 
     return proc;
 }
 

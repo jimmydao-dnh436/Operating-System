@@ -211,7 +211,8 @@ int MEMPHY_dump(struct memphy_struct *mp)
    int cnt = 0;
    while (cur != NULL)
    {
-      printf("%d ", cur->fpn);
+      // printf("%d ", cur->fpn);
+      printf("%llu ", (unsigned long long)cur->fpn);
       cur = cur->fp_next;
       cnt++;
    }
@@ -225,7 +226,8 @@ int MEMPHY_dump(struct memphy_struct *mp)
    cnt = 0;
    while (cur != NULL)
    {
-      printf("%d ", cur->fpn);
+      // printf("%d ", cur->fpn);
+      printf("%llu ", (unsigned long long)cur->fpn);
       cur = cur->fp_next;
       cnt++;
    }

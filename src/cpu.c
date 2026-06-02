@@ -7,7 +7,8 @@
 
 int calc(struct pcb_t *proc)
 {
-	return ((unsigned long)proc & 0UL);
+	// return ((unsigned long)proc & 0UL);
+	return ((uintptr_t)proc & 0UL);
 }
 
 int alloc(struct pcb_t *proc, uint32_t size, uint32_t reg_index)

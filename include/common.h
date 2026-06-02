@@ -41,7 +41,12 @@ typedef ARG_TYPE arg_t;
  *            based on the address mode
  */
 #ifdef MM64
+// #define FORMAT_ARG "%lu"
+#ifdef _WIN32
+#define FORMAT_ARG "%llu"
+#else
 #define FORMAT_ARG "%lu"
+#endif
 #else
 #define FORMAT_ARG "%u"
 #endif
