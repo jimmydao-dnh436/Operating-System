@@ -4,23 +4,23 @@ Time slot   1
 	Loaded a process at input/proc/sc2, PID: 1 PRIO: 15
 Time slot   2
 	CPU 0: Dispatched process  1
-liballoc:178
+liballoc:193
 print_pgtbl:
- PDG=b5cfe220b5301d30 P4g=b5cfe220b5302d40 PUD=b5cfe220b5303d50 PMD=b5cfe220b5304d60
+ PDG=0000000000000000 P4g=0000000000000000 PUD=0000000000000000 PMD=0000000000000000
 Time slot   3
-libwrite:502
+libwrite:489
 print_pgtbl:
- PDG=b5cfe210b5301d30 P4g=b5cfe210b5302d40 PUD=b5cfe210b5303d50 PMD=b5cfe210b5304d60
+ PDG=000002D07F80D040 P4g=000002D07F80E050 PUD=000002D07F80F060 PMD=000002D07F810070
 Time slot   4
 	CPU 0: Put process  1 to run queue
 	CPU 0: Dispatched process  1
-libwrite:502
+libwrite:489
 print_pgtbl:
- PDG=b5cfe210b5301d30 P4g=b5cfe210b5302d40 PUD=b5cfe210b5303d50 PMD=b5cfe210b5304d60
+ PDG=000002D07F80D040 P4g=000002D07F80E050 PUD=000002D07F80F060 PMD=000002D07F810070
 Time slot   5
-libwrite:502
+libwrite:489
 print_pgtbl:
- PDG=b5cfe210b5301d30 P4g=b5cfe210b5302d40 PUD=b5cfe210b5303d50 PMD=b5cfe210b5304d60
+ PDG=000002D07F80D040 P4g=000002D07F80E050 PUD=000002D07F80F060 PMD=000002D07F810070
 Time slot   6
 	CPU 0: Put process  1 to run queue
 	CPU 0: Dispatched process  1

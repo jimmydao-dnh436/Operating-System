@@ -1,3 +1,4 @@
+#!/bin/bash
 ./os os_0_mlq_paging  > input/os_0_mlq_paging.output
 ./os os_1_mlq_paging > input/os_1_mlq_paging.output
 ./os os_1_mlq_paging_small_1K > input/os_1_mlq_paging_small_1K.output
@@ -11,3 +12,6 @@
 ./os os_syscall > input/os_syscall.output
 ./os os_syscall_list > input/os_syscall_list.output
 mv input/*.output output
+
+
+

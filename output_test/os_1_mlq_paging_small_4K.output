@@ -2,22 +2,22 @@ Time slot   0
 ld_routine
 	Loaded a process at input/proc/p0s, PID: 1 PRIO: 130
 Time slot   1
-	CPU 1: Dispatched process  1
+	CPU 0: Dispatched process  1
 Time slot   2
 liballoc:193
 print_pgtbl:
- PDG=00000170AFEFEF70 P4g=00000170AFEFFF80 PUD=00000170AFF00F90 PMD=00000170AFF01FA0
+ PDG=00000213CF8FFCA0 P4g=00000213CF900CB0 PUD=00000213CF901CC0 PMD=00000213CF902CD0
 	Loaded a process at input/proc/m0s, PID: 2 PRIO: 120
-	CPU 3: Dispatched process  2
 Time slot   3
+	CPU 3: Dispatched process  2
 liballoc:193
+	CPU 0: Put process  1 to run queue
 print_pgtbl:
  PDG=0000000000000000 P4g=0000000000000000 PUD=0000000000000000 PMD=0000000000000000
-	CPU 1: Put process  1 to run queue
-	CPU 1: Dispatched process  1
+	CPU 0: Dispatched process  1
 liballoc:193
 print_pgtbl:
- PDG=00000170AFEFEF70 P4g=00000170AFEFFF80 PUD=00000170AFF00F90 PMD=00000170AFF01FA0
+ PDG=00000213CF8FFCA0 P4g=00000213CF900CB0 PUD=00000213CF901CC0 PMD=00000213CF902CD0
 	Loaded a process at input/proc/s3, PID: 3 PRIO: 39
 liballoc:193
 print_pgtbl:
@@ -26,18 +26,18 @@ Time slot   4
 	CPU 2: Dispatched process  3
 libfree:217
 print_pgtbl:
- PDG=00000170AFEFEF70 P4g=00000170AFEFFF80 PUD=00000170AFF00F90 PMD=00000170AFF01FA0
+ PDG=00000213CF8FFCA0 P4g=00000213CF900CB0 PUD=00000213CF901CC0 PMD=00000213CF902CD0
 	CPU 3: Put process  2 to run queue
 	CPU 3: Dispatched process  2
 Time slot   5
-	CPU 1: Put process  1 to run queue
 libfree:217
 print_pgtbl:
  PDG=0000000000000000 P4g=0000000000000000 PUD=0000000000000000 PMD=0000000000000000
-	CPU 1: Dispatched process  1
+	CPU 0: Put process  1 to run queue
+	CPU 0: Dispatched process  1
 liballoc:193
 print_pgtbl:
- PDG=00000170AFEFEF70 P4g=00000170AFEFFF80 PUD=00000170AFF00F90 PMD=00000170AFF01FA0
+ PDG=00000213CF8FFCA0 P4g=00000213CF900CB0 PUD=00000213CF901CC0 PMD=00000213CF902CD0
 	Loaded a process at input/proc/s0, PID: 4 PRIO: 38
 liballoc:193
 print_pgtbl:
@@ -45,62 +45,62 @@ print_pgtbl:
 Time slot   6
 	CPU 2: Put process  3 to run queue
 	CPU 2: Dispatched process  4
-	CPU 0: Dispatched process  3
+	CPU 1: Dispatched process  3
 libwrite:489
 print_pgtbl:
- PDG=00000170AFEFEF70 P4g=00000170AFEFFF80 PUD=00000170AFF00F90 PMD=00000170AFF01FA0
+ PDG=00000213CF8FFCA0 P4g=00000213CF900CB0 PUD=00000213CF901CC0 PMD=00000213CF902CD0
 	CPU 3: Put process  2 to run queue
-	CPU 3: Dispatched process  2
 Time slot   7
-	CPU 1: Put process  1 to run queue
-	CPU 1: Dispatched process  1
+	CPU 3: Dispatched process  2
+	CPU 0: Put process  1 to run queue
+	CPU 0: Dispatched process  1
 libread:434
 print_pgtbl:
- PDG=00000170AFEFEF70 P4g=00000170AFEFFF80 PUD=00000170AFF00F90 PMD=00000170AFF01FA0
+ PDG=00000213CF8FFCA0 P4g=00000213CF900CB0 PUD=00000213CF901CC0 PMD=00000213CF902CD0
 	CPU 2: Put process  4 to run queue
-	CPU 2: Dispatched process  4
 Time slot   8
+	CPU 2: Dispatched process  4
+	CPU 1: Put process  3 to run queue
 libwrite:489
 print_pgtbl:
-	CPU 0: Put process  3 to run queue
- PDG=00000170AFEFEF70 P4g=00000170AFEFFF80 PUD=00000170AFF00F90 PMD=00000170AFF01FA0
-	CPU 0: Dispatched process  3
+ PDG=00000213CF8FFCA0 P4g=00000213CF900CB0 PUD=00000213CF901CC0 PMD=00000213CF902CD0
+	CPU 1: Dispatched process  3
 	Loaded a process at input/proc/m1s, PID: 5 PRIO: 15
 	CPU 3: Processed  2 has finished
-	CPU 3: Dispatched process  5
 Time slot   9
+	CPU 3: Dispatched process  5
 liballoc:193
 print_pgtbl:
  PDG=0000000000000000 P4g=0000000000000000 PUD=0000000000000000 PMD=0000000000000000
-	CPU 1: Put process  1 to run queue
-	CPU 1: Dispatched process  1
+	CPU 0: Put process  1 to run queue
+	CPU 0: Dispatched process  1
 print_pgtbl:
- PDG=00000170AFEFEF70 P4g=00000170AFEFFF80 PUD=00000170AFF00F90 PMD=00000170AFF01FA0
+ PDG=00000213CF8FFCA0 P4g=00000213CF900CB0 PUD=00000213CF901CC0 PMD=00000213CF902CD0
 liballoc:193
 print_pgtbl:
  PDG=0000000000000000 P4g=0000000000000000 PUD=0000000000000000 PMD=0000000000000000
 Time slot  10
 	CPU 2: Put process  4 to run queue
 	CPU 2: Dispatched process  4
-	CPU 0: Put process  3 to run queue
+	CPU 1: Put process  3 to run queue
 libwrite:489
-	CPU 0: Dispatched process  3
 print_pgtbl:
- PDG=00000170AFEFEF70 P4g=00000170AFEFFF80 PUD=00000170AFF00F90 PMD=00000170AFF01FA0
+ PDG=00000213CF8FFCA0 P4g=00000213CF900CB0 PUD=00000213CF901CC0 PMD=00000213CF902CD0
+	CPU 1: Dispatched process  3
 	Loaded a process at input/proc/p1s, PID: 6 PRIO: 15
 	CPU 3: Put process  5 to run queue
 	CPU 3: Dispatched process  6
 Time slot  11
-	CPU 1: Put process  1 to run queue
-	CPU 1: Dispatched process  5
+	CPU 0: Put process  1 to run queue
+	CPU 0: Dispatched process  5
 libfree:217
 print_pgtbl:
  PDG=0000000000000000 P4g=0000000000000000 PUD=0000000000000000 PMD=0000000000000000
-	CPU 2: Put process  4 to run queue
 Time slot  12
+	CPU 2: Put process  4 to run queue
 	CPU 2: Dispatched process  4
-	CPU 0: Put process  3 to run queue
-	CPU 0: Dispatched process  3
+	CPU 1: Put process  3 to run queue
+	CPU 1: Dispatched process  3
 liballoc:193
 print_pgtbl:
  PDG=0000000000000000 P4g=0000000000000000 PUD=0000000000000000 PMD=0000000000000000
@@ -108,79 +108,79 @@ print_pgtbl:
 	CPU 3: Put process  6 to run queue
 	CPU 3: Dispatched process  6
 Time slot  13
-	CPU 1: Put process  5 to run queue
-	CPU 1: Dispatched process  5
+	CPU 0: Put process  5 to run queue
+	CPU 0: Dispatched process  5
 libfree:217
 print_pgtbl:
  PDG=0000000000000000 P4g=0000000000000000 PUD=0000000000000000 PMD=0000000000000000
 Time slot  14
 	CPU 2: Put process  4 to run queue
 	CPU 2: Dispatched process  4
-	CPU 0: Put process  3 to run queue
-	CPU 0: Dispatched process  3
+	CPU 1: Put process  3 to run queue
+	CPU 1: Dispatched process  3
 libfree:217
 print_pgtbl:
  PDG=0000000000000000 P4g=0000000000000000 PUD=0000000000000000 PMD=0000000000000000
-Time slot  15
 	CPU 3: Put process  6 to run queue
-	CPU 1: Processed  5 has finished
-	CPU 1: Dispatched process  7
-	CPU 0: Processed  3 has finished
 	CPU 3: Dispatched process  6
+Time slot  15
+	CPU 1: Processed  3 has finished
+	CPU 0: Processed  5 has finished
+	CPU 1: Dispatched process  7
 	CPU 0: Dispatched process  1
 print_pgtbl:
- PDG=00000170AFEFEF70 P4g=00000170AFEFFF80 PUD=00000170AFF00F90 PMD=00000170AFF01FA0
+ PDG=00000213CF8FFCA0 P4g=00000213CF900CB0 PUD=00000213CF901CC0 PMD=00000213CF902CD0
+	Loaded a process at input/proc/s1, PID: 8 PRIO: 0
 Time slot  16
 	CPU 2: Put process  4 to run queue
-	CPU 2: Dispatched process  4
-	Loaded a process at input/proc/s1, PID: 8 PRIO: 0
-Time slot  17
+	CPU 2: Dispatched process  8
 	CPU 3: Put process  6 to run queue
-	CPU 3: Dispatched process  8
-	CPU 1: Put process  7 to run queue
-	CPU 1: Dispatched process  6
+	CPU 3: Dispatched process  6
+Time slot  17
 	CPU 0: Put process  1 to run queue
-	CPU 0: Dispatched process  7
+	CPU 1: Put process  7 to run queue
+	CPU 0: Dispatched process  4
+	CPU 1: Dispatched process  7
 Time slot  18
-	CPU 2: Put process  4 to run queue
-	CPU 2: Dispatched process  4
+	CPU 2: Put process  8 to run queue
+	CPU 2: Dispatched process  8
+	CPU 3: Put process  6 to run queue
+	CPU 3: Dispatched process  6
 Time slot  19
-	CPU 3: Put process  8 to run queue
-	CPU 3: Dispatched process  8
-	CPU 1: Put process  6 to run queue
-	CPU 1: Dispatched process  6
-	CPU 0: Put process  7 to run queue
-	CPU 0: Dispatched process  7
+	CPU 1: Put process  7 to run queue
+	CPU 0: Put process  4 to run queue
+	CPU 1: Dispatched process  7
+	CPU 0: Dispatched process  4
 Time slot  20
-	CPU 2: Put process  4 to run queue
-	CPU 2: Dispatched process  4
-	CPU 3: Put process  8 to run queue
-	CPU 3: Dispatched process  8
+	CPU 2: Put process  8 to run queue
+	CPU 2: Dispatched process  8
+	CPU 3: Processed  6 has finished
+	CPU 3: Dispatched process  1
 Time slot  21
-	CPU 2: Processed  4 has finished
-	CPU 1: Processed  6 has finished
-	CPU 2: Dispatched process  1
 libfree:217
-	CPU 1 stopped
 print_pgtbl:
- PDG=00000170AFEFEF70 P4g=00000170AFEFFF80 PUD=00000170AFF00F90 PMD=00000170AFF01FA0
-	CPU 0: Put process  7 to run queue
-	CPU 0: Dispatched process  7
+ PDG=00000213CF8FFCA0 P4g=00000213CF900CB0 PUD=00000213CF901CC0 PMD=00000213CF902CD0
+	CPU 1: Put process  7 to run queue
+	CPU 1: Dispatched process  7
+	CPU 0: Put process  4 to run queue
+	CPU 0: Dispatched process  4
+	CPU 2: Put process  8 to run queue
 Time slot  22
+	CPU 2: Dispatched process  8
+	CPU 0: Processed  4 has finished
+	CPU 0 stopped
+	CPU 3: Processed  1 has finished
 Time slot  23
-	CPU 3: Put process  8 to run queue
-	CPU 3: Dispatched process  8
-	CPU 2: Processed  1 has finished
-	CPU 2 stopped
-	CPU 0: Put process  7 to run queue
-	CPU 0: Dispatched process  7
-Time slot  24
-	CPU 3: Processed  8 has finished
+	CPU 2: Processed  8 has finished
 	CPU 3 stopped
+	CPU 2 stopped
+	CPU 1: Put process  7 to run queue
+	CPU 1: Dispatched process  7
+Time slot  24
 Time slot  25
-	CPU 0: Put process  7 to run queue
-	CPU 0: Dispatched process  7
+	CPU 1: Put process  7 to run queue
+	CPU 1: Dispatched process  7
 Time slot  26
 Time slot  27
-	CPU 0: Processed  7 has finished
-	CPU 0 stopped
+	CPU 1: Processed  7 has finished
+	CPU 1 stopped

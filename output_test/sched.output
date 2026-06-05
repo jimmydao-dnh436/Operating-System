@@ -47,8 +47,8 @@ Time slot  20
 Time slot  21
 Time slot  22
 	CPU 1: Processed  2 has finished
-	CPU 1 stopped
 	CPU 0: Put process  3 to run queue
+	CPU 1 stopped
 	CPU 0: Dispatched process  3
 Time slot  23
 Time slot  24
