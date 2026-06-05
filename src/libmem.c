@@ -246,8 +246,26 @@ int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
   }
 
   /* If the page is neither present nor marked as swapped, the mapping is invalid. */
+  /*
   if ((pte & PAGING_PTE_SWAPPED_MASK) == 0)
     return -1;
+  */
+
+  /* Lazy Allocation: If the page is not present and not swapped, allocate a new frame. */
+  if ((pte & PAGING_PTE_SWAPPED_MASK) == 0)
+  {
+    if (MEMPHY_get_freefp(caller->krnl->mram, &tgtfpn) == 0)
+    {
+      if (pte_set_fpn(caller, pgn, tgtfpn) != 0)
+        return -1;
+      
+      enlist_pgn_node(&mm->fifo_pgn, pgn);
+      *fpn = tgtfpn;
+      return 0;
+    }
+    // If no free frame, fall through to slow path or return error if not implemented
+    return -1; 
+  }
 
   {
     addr_t swpfpn = PAGING_SWP(pte);
